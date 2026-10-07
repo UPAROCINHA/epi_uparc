@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Entrega de EPI - UPA Rocinha</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#1c2733;--mut:#5f6f7e;--pri:#0b6e4f;--pri2:#0a5a41;--err:#b3261e;--bd:#d9e0e6}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--pri);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0}
+#status{font-size:12px;opacity:.9}
+nav{display:flex;background:#fff;border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:5;overflow-x:auto}
+nav button{flex:1;min-width:90px;padding:12px 8px;border:0;background:none;font-size:14px;font-weight:600;color:var(--mut);cursor:pointer;border-bottom:3px solid transparent}
+nav button.on{color:var(--pri);border-bottom-color:var(--pri)}
+main{max-width:900px;margin:0 auto;padding:14px}
+section{display:none}
+section.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:14px}
+h2{font-size:16px;margin:0 0 10px}
+label{display:block;font-size:13px;color:var(--mut);margin:8px 0 3px}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;font-size:15px;background:#fff}
+button.b{background:var(--pri);color:#fff;border:0;border-radius:8px;padding:11px 16px;font-size:15px;font-weight:600;cursor:pointer;margin:4px 4px 4px 0}
+button.b:hover{background:var(--pri2)}
+button.b.sec{background:#e7edf1;color:var(--ink)}
+button.b.red{background:var(--err)}
+button.b:disabled{opacity:.5;cursor:not-allowed}
+.vid{position:relative;background:#000;border-radius:10px;overflow:hidden;max-width:480px;aspect-ratio:4/3}
+.vid video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.epi{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eef2f5}
+.epi input[type=checkbox]{width:20px;height:20px}
+.epi .n{flex:1;font-size:15px}
+.epi .q{width:64px}
+.epi .ca{width:90px}
+.res{border:2px solid var(--pri);background:#eaf6f1;border-radius:10px;padding:12px;margin-top:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.res img{width:72px;height:72px;object-fit:cover;border-radius:8px}
+.res.no{border-color:var(--err);background:#fdeceb}
+.mut{color:var(--mut);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--bd);vertical-align:top}
+td img{width:48px;height:48px;object-fit:cover;border-radius:6px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>div{flex:1;min-width:160px}
+.tag{display:inline-block;background:#fff3cd;color:#7a5b00;border-radius:6px;padding:1px 6px;font-size:12px}
+.fl{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #eef2f5}
+.fl img{width:44px;height:44px;border-radius:50%;object-fit:cover}
+.fl .t{flex:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>Entrega de EPI &middot; UPA Rocinha</h1>
+  <span id="status">Carregando...</span>
+</header>
+<nav id="nav">
+  <button data-t="entrega" class="on">Entrega</button>
+  <button data-t="func">Funcion&aacute;rios</button>
+  <button data-t="regs">Registros</button>
+  <button data-t="epis">Itens de EPI</button>
+  <button data-t="backup">Backup</button>
+</nav>
+<main>
+
+<!-- ENTREGA -->
+<section id="s-entrega" class="on">
+  <div class="card">
+    <h2>1. Itens entregues</h2>
+    <div id="listaEntrega"></div>
+  </div>
+  <div class="card">
+    <h2>2. Reconhecimento facial</h2>
+    <div class="vid"><video id="vEntrega" playsinline muted></video></div>
+    <button class="b sec" id="btnCamE">Ligar c&acirc;mera</button>
+    <button class="b sec" id="btnTrocaE">Trocar c&acirc;mera</button>
+    <button class="b" id="btnIdent" disabled>Identificar e registrar</button>
+    <div id="resultado"></div>
+  </div>
+  <div class="card">
+    <h2>Plano B: sem reconhecimento</h2>
+    <p class="mut">Use apenas se o rosto n&atilde;o for reconhecido. Fica marcado no registro como "manual".</p>
+    <label>Funcion&aacute;rio</label>
+    <select id="manualFunc"></select>
+    <label>Motivo</label>
+    <input type="text" id="manualMotivo" placeholder="Ex.: m&aacute;scara cobrindo o rosto, c&acirc;mera com defeito">
+    <button class="b sec" id="btnManual">Registrar manualmente</button>
+  </div>
+</section>
+
+<!-- FUNCIONARIOS -->
+<section id="s-func">
+  <div class="card">
+    <h2 id="tituloForm">Cadastrar funcion&aacute;rio</h2>
+    <div class="row">
+      <div><label>Nome completo</label><input type="text" id="fNome"></div>
+      <div><label>Matr&iacute;cula</label><input type="text" id="fMat"></div>
+      <div><label>Cargo / setor</label><input type="text" id="fSetor"></div>
+    </div>
+    <label>Foto do rosto (tire 3 amostras: de frente, levemente para cada lado)</label>
+    <div class="vid"><video id="vFunc" playsinline muted></video></div>
+    <button class="b sec" id="btnCamF">Ligar c&acirc;mera</button>
+    <button class="b sec" id="btnTrocaF">Trocar c&acirc;mera</button>
+    <button class="b" id="btnAmostra" disabled>Capturar amostra</button>
+    <p class="mut" id="amostraInfo">Amostras: 0/3</p>
+    <label style="display:flex;gap:8px;align-items:flex-start;color:var(--ink)">
+      <input type="checkbox" id="fConsent" style="width:20px;height:20px;margin-top:2px">
+      <span>O funcion&aacute;rio foi informado e concordou com o uso do reconhecimento facial para registro de entrega de EPI (LGPD).</span>
+    </label>
+    <button class="b" id="btnSalvarF">Salvar funcion&aacute;rio</button>
+    <button class="b sec" id="btnCancelarF">Limpar</button>
+  </div>
+  <div class="card">
+    <h2>Cadastrados</h2>
+    <div id="listaFunc"></div>
+  </div>
+</section>
+
+<!-- REGISTROS -->
+<section id="s-regs">
+  <div class="card">
+    <h2>Filtros</h2>
+    <div class="row">
+      <div><label>Funcion&aacute;rio</label><select id="rFunc"></select></div>
+      <div><label>De</label><input type="date" id="rDe"></div>
+      <div><label>At&eacute;</label><input type="date" id="rAte"></div>
+    </div>
+    <button class="b sec" id="btnCSV">Exportar CSV</button>
+    <button class="b" id="btnFicha">Imprimir ficha do funcion&aacute;rio</button>
+  </div>
+  <div class="card" style="overflow-x:auto">
+    <table>
+      <thead><tr><th>Foto</th><th>Data/hora</th><th>Funcion&aacute;rio</th><th>Itens</th><th>M&eacute;todo</th></tr></thead>
+      <tbody id="tbRegs"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- EPIS -->
+<section id="s-epis">
+  <div class="card">
+    <h2>Itens de EPI</h2>
+    <p class="mut">Cadastre os itens e, se quiser, o n&ordm; do CA (Certificado de Aprova&ccedil;&atilde;o) para sair na ficha.</p>
+    <div id="listaEpis"></div>
+    <div class="row">
+      <div><label>Novo item</label><input type="text" id="eNome"></div>
+      <div><label>CA (opcional)</label><input type="text" id="eCA"></div>
+    </div>
+    <button class="b" id="btnAddEpi">Adicionar item</button>
+  </div>
+</section>
+
+<!-- BACKUP -->
+<section id="s-backup">
+  <div class="card">
+    <h2>Backup dos dados</h2>
+    <p class="mut">Os dados ficam guardados <b>neste aparelho e navegador</b>. Fa&ccedil;a backup com frequ&ecirc;ncia e guarde em local seguro (cont&eacute;m fotos e dados biom&eacute;tricos).</p>
+    <button class="b" id="btnExp">Baixar backup (.json)</button>
+    <label>Restaurar de um backup</label>
+    <input type="file" id="fileImp" accept="application/json">
+    <button class="b sec" id="btnImp">Restaurar (substitui os dados atuais)</button>
+  </div>
+</section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+<script>
+(function(){
+'use strict';
+const MODEL_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+const LIMIAR=0.5; // quanto menor, mais rigoroso
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const fmt=ts=>new Date(ts).toLocaleString('pt-BR');
+
+/* ---------- IndexedDB ---------- */
+function openDB(){return new Promise((res,rej)=>{
+  const r=indexedDB.open('epi-face-v1',1);
+  r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('funcs',{keyPath:'id'});d.createObjectStore('regs',{keyPath:'id'});d.createObjectStore('epis',{keyPath:'id'});};
+  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);
+});}
+const dbp=openDB();
+async function tx(store,mode,fn){
+  const d=await dbp;
+  return new Promise((res,rej)=>{
+    const t=d.transaction(store,mode);const out=fn(t.objectStore(store));
+    t.oncomplete=()=>res(out&&out.result!==undefined?out.result:undefined);
+    t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error);
+  });
+}
+const getAll=s=>tx(s,'readonly',st=>st.getAll());
+const put=(s,v)=>tx(s,'readwrite',st=>{st.put(v)});
+const del=(s,id)=>tx(s,'readwrite',st=>{st.delete(id)});
+const clear=s=>tx(s,'readwrite',st=>{st.clear()});
+
+/* ---------- estado ---------- */
+let funcs=[],regs=[],epis=[];
+let modelosOk=false;
+let stream=null,facing='user',videoAtivo=null;
+let amostras=[]; // {desc:[...], foto:dataURL}
+let editId=null;
+let pendente=null; // match aguardando confirmacao
+
+async function recarregar(){
+  funcs=(await getAll('funcs')).sort((a,b)=>a.nome.localeCompare(b.nome));
+  regs=(await getAll('regs')).sort((a,b)=>b.ts-a.ts);
+  epis=(await getAll('epis')).sort((a,b)=>a.nome.localeCompare(b.nome));
+  if(!epis.length){
+    const padrao=['Luva de procedimento','Máscara cirúrgica','Máscara PFF2/N95','Óculos de proteção','Protetor facial (face shield)','Avental descartável','Capote impermeável','Gorro','Propé'];
+    for(const n of padrao) await put('epis',{id:uid(),nome:n,ca:''});
+    epis=(await getAll('epis')).sort((a,b)=>a.nome.localeCompare(b.nome));
+  }
+  desenhar();
+}
+
+/* ---------- camera ---------- */
+async function ligarCam(video){
+  pararCam();
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert('Este navegador não permite usar a câmera (é preciso abrir o app por HTTPS).');return false;}
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:640},height:{ideal:480}},audio:false});
+    video.srcObject=stream;await video.play();videoAtivo=video;
+    video.style.transform=facing==='user'?'scaleX(-1)':'none';
+    return true;
+  }catch(e){alert('Não consegui acessar a câmera: '+e.message);return false;}
+}
+function pararCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}videoAtivo=null;
+  $('btnIdent').disabled=true;$('btnAmostra').disabled=true;}
+function foto(video){
+  const w=320,h=Math.round(video.videoHeight*w/video.videoWidth)||240;
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const x=c.getContext('2d');
+  if(facing==='user'){x.translate(w,0);x.scale(-1,1);}
+  x.drawImage(video,0,0,w,h);
+  return c.toDataURL('image/jpeg',0.7);
+}
+function detectar(video){
+  return faceapi.detectSingleFace(video,new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:0.5}))
+    .withFaceLandmarks().withFaceDescriptor();
+}
+
+/* ---------- modelos ---------- */
+async function carregarModelos(){
+  try{
+    $('status').textContent='Carregando reconhecimento facial...';
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+    ]);
+    modelosOk=true;$('status').textContent='Pronto';
+  }catch(e){
+    $('status').textContent='Erro ao carregar modelos (verifique a internet)';
+  }
+}
+
+/* ---------- abas ---------- */
+$('nav').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==='s-'+b.dataset.t));
+  pararCam();
+});
+
+/* ---------- desenhar telas ---------- */
+function desenhar(){
+  // entrega: lista de EPIs
+  $('listaEntrega').innerHTML=epis.map(e=>`<div class="epi">
+    <input type="checkbox" data-id="${e.id}">
+    <span class="n">${esc(e.nome)}${e.ca?` <span class="mut">(CA ${esc(e.ca)})</span>`:''}</span>
+    <input type="number" class="q" min="1" value="1" data-q="${e.id}">
+  </div>`).join('')||'<p class="mut">Cadastre itens na aba "Itens de EPI".</p>';
+  // selects
+  const opts='<option value="">Selecione...</option>'+funcs.map(f=>`<option value="${f.id}">${esc(f.nome)}${f.mat?' ('+esc(f.mat)+')':''}</option>`).join('');
+  $('manualFunc').innerHTML=opts;
+  const vr=$('rFunc').value;
+  $('rFunc').innerHTML='<option value="">Todos</option>'+funcs.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join('');
+  $('rFunc').value=vr;
+  // funcionarios
+  $('listaFunc').innerHTML=funcs.map(f=>`<div class="fl">
+    <img src="${f.foto||''}" alt="">
+    <div class="t"><b>${esc(f.nome)}</b><br><span class="mut">${esc(f.mat||'')} ${esc(f.setor||'')}</span></div>
+    <button class="b sec" data-edit="${f.id}">Editar</button>
+    <button class="b red" data-delf="${f.id}">Excluir</button>
+  </div>`).join('')||'<p class="mut">Nenhum funcionário cadastrado.</p>';
+  // epis
+  $('listaEpis').innerHTML=epis.map(e=>`<div class="fl">
+    <div class="t">${esc(e.nome)} ${e.ca?'<span class="mut">CA '+esc(e.ca)+'</span>':''}</div>
+    <button class="b red" data-dele="${e.id}">Remover</button>
+  </div>`).join('');
+  desenharRegs();
+}
+function filtrados(){
+  const f=$('rFunc').value,de=$('rDe').value,ate=$('rAte').value;
+  const t0=de?new Date(de+'T00:00:00').getTime():0;
+  const t1=ate?new Date(ate+'T23:59:59').getTime():Infinity;
+  return regs.filter(r=>(!f||r.funcId===f)&&r.ts>=t0&&r.ts<=t1);
+}
+function itensTxt(r){return r.itens.map(i=>i.qtd+'x '+i.nome+(i.ca?' (CA '+i.ca+')':'')).join('; ');}
+function desenharRegs(){
+  $('tbRegs').innerHTML=filtrados().map(r=>`<tr>
+    <td>${r.foto?`<img src="${r.foto}" alt="">`:''}</td>
+    <td>${fmt(r.ts)}</td>
+    <td>${esc(r.nome)}<br><span class="mut">${esc(r.mat||'')}</span></td>
+    <td>${esc(itensTxt(r))}</td>
+    <td>${r.metodo==='facial'?'Facial <span class="mut">('+Math.max(0,Math.round((1-r.dist)*100))+'%)</span>':'<span class="tag">Manual</span><br><span class="mut">'+esc(r.motivo||'')+'</span>'}</td>
+  </tr>`).join('')||'<tr><td colspan="5" class="mut">Nenhum registro.</td></tr>';
+}
+['rFunc','rDe','rAte'].forEach(id=>$(id).addEventListener('change',desenharRegs));
+
+/* ---------- entrega ---------- */
+function itensSelecionados(){
+  const out=[];
+  document.querySelectorAll('#listaEntrega input[type=checkbox]:checked').forEach(cb=>{
+    const e=epis.find(x=>x.id===cb.dataset.id);
+    const q=parseInt(document.querySelector(`[data-q="${cb.dataset.id}"]`).value,10)||1;
+    if(e) out.push({nome:e.nome,ca:e.ca||'',qtd:q});
+  });
+  return out;
+}
+function limparEntrega(){
+  document.querySelectorAll('#listaEntrega input[type=checkbox]').forEach(cb=>cb.checked=false);
+  document.querySelectorAll('#listaEntrega .q').forEach(q=>q.value=1);
+  $('resultado').innerHTML='';pendente=null;
+}
+$('btnCamE').onclick=async()=>{
+  if(!modelosOk){alert('Aguarde o carregamento do reconhecimento facial.');return;}
+  if(await ligarCam($('vEntrega')))$('btnIdent').disabled=false;
+};
+$('btnTrocaE').onclick=async()=>{facing=facing==='user'?'environment':'user';if(await ligarCam($('vEntrega')))$('btnIdent').disabled=false;};
+
+$('btnIdent').onclick=async()=>{
+  const itens=itensSelecionados();
+  if(!itens.length){alert('Marque ao menos um item de EPI.');return;}
+  if(!funcs.length){alert('Cadastre funcionários primeiro.');return;}
+  const v=$('vEntrega');
+  $('btnIdent').disabled=true;$('resultado').innerHTML='<p class="mut">Analisando...</p>';
+  try{
+    const det=await detectar(v);
+    if(!det){$('resultado').innerHTML='<div class="res no">Nenhum rosto encontrado. Aproxime-se e olhe para a câmera.</div>';return;}
+    const f0=foto(v);
+    let best=null,bd=9;
+    for(const f of funcs){
+      for(const s of f.descs){
+        const d=faceapi.euclideanDistance(det.descriptor,new Float32Array(s));
+        if(d<bd){bd=d;best=f;}
+      }
+    }
+    if(!best||bd>LIMIAR){
+      $('resultado').innerHTML='<div class="res no">Rosto não reconhecido. Tente de novo com boa iluminação ou use o plano B.</div>';
+      return;
+    }
+    pendente={func:best,dist:bd,foto:f0,itens};
+    $('resultado').innerHTML=`<div class="res">
+      <img src="${best.foto||f0}" alt="">
+      <div style="flex:1"><b>${esc(best.nome)}</b><br><span class="mut">${esc(best.mat||'')} · semelhança ${Math.max(0,Math.round((1-bd)*100))}%</span><br>
+      <span class="mut">${esc(itens.map(i=>i.qtd+'x '+i.nome).join(', '))}</span></div>
+      <div><button class="b" id="btnConf">Confirmar entrega</button><button class="b sec" id="btnNeg">Não é essa pessoa</button></div>
+    </div>`;
+    $('btnConf').onclick=async()=>{
+      const p=pendente;if(!p)return;
+      await put('regs',{id:uid(),ts:Date.now(),funcId:p.func.id,nome:p.func.nome,mat:p.func.mat,itens:p.itens,metodo:'facial',dist:p.dist,foto:p.foto});
+      await recarregar();limparEntrega();
+      $('resultado').innerHTML='<div class="res">Entrega registrada com sucesso.</div>';
+    };
+    $('btnNeg').onclick=()=>{pendente=null;$('resultado').innerHTML='';};
+  }catch(e){
+    $('resultado').innerHTML='<div class="res no">Erro: '+esc(e.message)+'</div>';
+  }finally{$('btnIdent').disabled=!stream;}
+};
+
+$('btnManual').onclick=async()=>{
+  const itens=itensSelecionados();
+  const f=funcs.find(x=>x.id===$('manualFunc').value);
+  const motivo=$('manualMotivo').value.trim();
+  if(!itens.length){alert('Marque ao menos um item de EPI.');return;}
+  if(!f){alert('Selecione o funcionário.');return;}
+  if(!motivo){alert('Informe o motivo.');return;}
+  let fo='';
+  if(stream&&videoAtivo===$('vEntrega'))fo=foto($('vEntrega'));
+  await put('regs',{id:uid(),ts:Date.now(),funcId:f.id,nome:f.nome,mat:f.mat,itens,metodo:'manual',motivo,foto:fo});
+  $('manualMotivo').value='';
+  await recarregar();limparEntrega();
+  $('resultado').innerHTML='<div class="res">Entrega registrada (manual).</div>';
+};
+
+/* ---------- funcionarios ---------- */
+$('btnCamF').onclick=async()=>{
+  if(!modelosOk){alert('Aguarde o carregamento do reconhecimento facial.');return;}
+  if(await ligarCam($('vFunc')))$('btnAmostra').disabled=false;
+};
+$('btnTrocaF').onclick=async()=>{facing=facing==='user'?'environment':'user';if(await ligarCam($('vFunc')))$('btnAmostra').disabled=false;};
+$('btnAmostra').onclick=async()=>{
+  if(amostras.length>=3){alert('Já são 3 amostras. Salve ou clique em Limpar.');return;}
+  $('btnAmostra').disabled=true;
+  try{
+    const det=await detectar($('vFunc'));
+    if(!det){alert('Nenhum rosto encontrado. Tente de novo.');return;}
+    amostras.push({desc:Array.from(det.descriptor),foto:foto($('vFunc'))});
+    $('amostraInfo').textContent='Amostras: '+amostras.length+'/3';
+  }catch(e){alert('Erro: '+e.message);}
+  finally{$('btnAmostra').disabled=!stream;}
+};
+function limparForm(){
+  editId=null;amostras=[];
+  ['fNome','fMat','fSetor'].forEach(i=>$(i).value='');
+  $('fConsent').checked=false;
+  $('amostraInfo').textContent='Amostras: 0/3';
+  $('tituloForm').textContent='Cadastrar funcionário';
+}
+$('btnCancelarF').onclick=limparForm;
+$('btnSalvarF').onclick=async()=>{
+  const nome=$('fNome').value.trim();
+  if(!nome){alert('Informe o nome.');return;}
+  const antigo=editId?funcs.find(f=>f.id===editId):null;
+  if(!antigo&&amostras.length<2){alert('Capture ao menos 2 amostras do rosto.');return;}
+  if(!$('fConsent').checked){alert('Confirme o consentimento do funcionário.');return;}
+  const f={
+    id:editId||uid(),nome,mat:$('fMat').value.trim(),setor:$('fSetor').value.trim(),
+    descs:amostras.length?amostras.map(a=>a.desc):antigo.descs,
+    foto:amostras.length?amostras[0].foto:antigo.foto,
+    consentimento:antigo?antigo.consentimento:Date.now()
+  };
+  await put('funcs',f);
+  limparForm();await recarregar();
+  alert('Funcionário salvo.');
+};
+$('listaFunc').addEventListener('click',async e=>{
+  const ed=e.target.closest('[data-edit]'),dl=e.target.closest('[data-delf]');
+  if(ed){
+    const f=funcs.find(x=>x.id===ed.dataset.edit);if(!f)return;
+    editId=f.id;amostras=[];
+    $('fNome').value=f.nome;$('fMat').value=f.mat||'';$('fSetor').value=f.setor||'';
+    $('fConsent').checked=true;
+    $('amostraInfo').textContent='Amostras: 0/3 (deixe em branco para manter o rosto atual)';
+    $('tituloForm').textContent='Editar funcionário';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  if(dl){
+    const f=funcs.find(x=>x.id===dl.dataset.delf);
+    if(f&&confirm('Excluir '+f.nome+'? Os registros de entrega anteriores são mantidos.')){await del('funcs',f.id);await recarregar();}
+  }
+});
+
+/* ---------- epis ---------- */
+$('btnAddEpi').onclick=async()=>{
+  const n=$('eNome').value.trim();if(!n)return;
+  await put('epis',{id:uid(),nome:n,ca:$('eCA').value.trim()});
+  $('eNome').value='';$('eCA').value='';await recarregar();
+};
+$('listaEpis').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-dele]');
+  if(b&&confirm('Remover este item da lista?')){await del('epis',b.dataset.dele);await recarregar();}
+});
+
+/* ---------- CSV e ficha ---------- */
+$('btnCSV').onclick=()=>{
+  const linhas=[['Data/hora','Funcionário','Matrícula','Itens','Método','Motivo manual','Semelhança %']];
+  filtrados().slice().reverse().forEach(r=>linhas.push([fmt(r.ts),r.nome,r.mat||'',itensTxt(r),r.metodo,r.motivo||'',r.metodo==='facial'?Math.max(0,Math.round((1-r.dist)*100)):'']));
+  const csv='\ufeff'+linhas.map(l=>l.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  baixar(new Blob([csv],{type:'text/csv;charset=utf-8'}),'registros-epi.csv');
+};
+$('btnFicha').onclick=()=>{
+  const id=$('rFunc').value;
+  if(!id){alert('Selecione um funcionário no filtro.');return;}
+  const f=funcs.find(x=>x.id===id);
+  const rs=filtrados().slice().reverse();
+  const w=window.open('','_blank');
+  if(!w){alert('Permita pop-ups para imprimir.');return;}
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Ficha de EPI</title>
+  <style>body{font-family:Arial,sans-serif;margin:24px;color:#000}h1{font-size:18px}table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{border:1px solid #444;padding:6px;text-align:left;vertical-align:top}img{width:44px;height:44px;object-fit:cover}</style></head><body>
+  <h1>Ficha de Entrega de EPI &mdash; UPA Rocinha</h1>
+  <p><b>Funcionário:</b> ${esc(f.nome)} &nbsp; <b>Matrícula:</b> ${esc(f.mat||'')} &nbsp; <b>Cargo/setor:</b> ${esc(f.setor||'')}</p>
+  <p style="font-size:12px">Declaro ter recebido os EPIs abaixo, confirmado por reconhecimento facial (ou registro manual, quando indicado), e estar ciente da obrigação de uso, guarda e conservação.</p>
+  <table><thead><tr><th>Data/hora</th><th>Itens (qtd / CA)</th><th>Confirmação</th><th>Foto</th></tr></thead><tbody>
+  ${rs.map(r=>`<tr><td>${fmt(r.ts)}</td><td>${esc(itensTxt(r))}</td><td>${r.metodo==='facial'?'Facial':'Manual: '+esc(r.motivo||'')}</td><td>${r.foto?`<img src="${r.foto}">`:''}</td></tr>`).join('')||'<tr><td colspan="4">Sem registros.</td></tr>'}
+  </tbody></table>
+  <p style="margin-top:40px;font-size:12px">Responsável pela entrega: ______________________________</p>
+  <script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
+};
+function baixar(blob,nome){
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nome;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
+/* ---------- backup ---------- */
+$('btnExp').onclick=()=>{
+  const d=new Date().toISOString().slice(0,10);
+  baixar(new Blob([JSON.stringify({versao:1,funcs,regs,epis})],{type:'application/json'}),'backup-epi-'+d+'.json');
+};
+$('btnImp').onclick=async()=>{
+  const file=$('fileImp').files[0];
+  if(!file){alert('Escolha o arquivo de backup.');return;}
+  if(!confirm('Isto vai substituir TODOS os dados atuais. Continuar?'))return;
+  try{
+    const j=JSON.parse(await file.text());
+    if(!j.funcs||!j.regs||!j.epis)throw new Error('Arquivo inválido.');
+    await clear('funcs');await clear('regs');await clear('epis');
+    for(const x of j.funcs)await put('funcs',x);
+    for(const x of j.regs)await put('regs',x);
+    for(const x of j.epis)await put('epis',x);
+    await recarregar();alert('Backup restaurado.');
+  }catch(e){alert('Erro ao restaurar: '+e.message);}
+};
+
+/* ---------- inicio ---------- */
+(async function(){
+  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+  await recarregar();
+  if(typeof faceapi==='undefined'){$('status').textContent='Biblioteca facial não carregou (verifique a internet)';return;}
+  await carregarModelos();
+})();
+})();
+</script>
+</body>
+</html>
